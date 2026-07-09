@@ -1515,8 +1515,8 @@
       content.style.gridRow = '' + cr
     }
 
-    /* auto-add sidebar toggle if shell has a sidebar + content */
-    if (left && content && !el._sprinkleShellInit) {
+    /* auto-add sidebar toggle if shell has a sidebar + content (skip if shell-static) */
+    if (left && content && !el._sprinkleShellInit && !el.hasAttribute('shell-static')) {
       el._sprinkleShellInit = true
 
       if (window.innerWidth <= 768) {
