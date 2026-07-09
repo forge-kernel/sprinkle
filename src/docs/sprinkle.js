@@ -1523,7 +1523,6 @@
         el.setAttribute('sidebar-hidden', '')
       }
 
-      /* toggle button in content area */
       var btn = document.createElement('button')
       btn.className = 'sprinkle-sidebar-toggle'
       btn.setAttribute('aria-label', 'Toggle sidebar')
@@ -1532,40 +1531,6 @@
         el.toggleAttribute('sidebar-hidden')
       })
       content.insertBefore(btn, content.firstChild)
-
-      /* close button inside sidebar */
-      var close = document.createElement('button')
-      close.className = 'sprinkle-sidebar-close'
-      close.setAttribute('aria-label', 'Close sidebar')
-      close.innerHTML = '\u00d7'
-      close.addEventListener('click', function () {
-        el.toggleAttribute('sidebar-hidden')
-      })
-      left.insertBefore(close, left.firstChild)
-
-      /* close sidebar on outside click on mobile */
-      el.addEventListener('click', function (e) {
-        if (window.innerWidth <= 768 && !el.hasAttribute('sidebar-hidden')) {
-          if (!e.target.closest('[sidebar]') && !e.target.closest('.sprinkle-sidebar-toggle')) {
-            el.setAttribute('sidebar-hidden', '')
-          }
-        }
-      })
-
-      /* auto-collapse/show on breakpoint cross */
-      var bp = 768
-      var wasMobile = window.innerWidth <= bp
-      window.addEventListener('resize', function () {
-        var isMobile = window.innerWidth <= bp
-        if (isMobile !== wasMobile) {
-          if (isMobile) {
-            el.setAttribute('sidebar-hidden', '')
-          } else {
-            el.removeAttribute('sidebar-hidden')
-          }
-          wasMobile = isMobile
-        }
-      })
     }
   })
 
