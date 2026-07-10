@@ -491,26 +491,75 @@ details.sprinkle-accordion > .sprinkle-accordion-body {
 /* ── date-range active state ── */
 
 input[data-sprinkle-range-active] {
-  outline: 2px solid -webkit-focus-ring-color;
-  outline: 2px solid highlight;
-  outline-offset: 1px;
+  border-color: var(--sprinkle-dp-accent, #4a90d9);
+  box-shadow: 0 0 0 2px rgba(74,144,217,0.2);
 }
 
-/* ── date-input (cross-browser standardization) ── */
+/* ── date-input (custom date picker) ── */
+
+:root {
+  --sprinkle-dp-bg: #fff;
+  --sprinkle-dp-text: #1a1a1a;
+  --sprinkle-dp-border: #e0e0e0;
+  --sprinkle-dp-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  --sprinkle-dp-radius: 8px;
+  --sprinkle-dp-accent: #4a90d9;
+  --sprinkle-dp-accent-text: #fff;
+  --sprinkle-dp-disabled: #ccc;
+  --sprinkle-dp-hover: #f0f0f0;
+  --sprinkle-dp-range-bg: rgba(74,144,217,0.18);
+  --sprinkle-dp-today-ring: #4a90d9;
+  --sprinkle-dp-header-bg: transparent;
+  --sprinkle-dp-nav-color: #666;
+  --sprinkle-dp-nav-hover: #1a1a1a;
+  --sprinkle-dp-weekday-color: #999;
+  --sprinkle-dp-cell-size: 36px;
+  --sprinkle-dp-font-size: 14px;
+  --sprinkle-dp-z: 200;
+  --sprinkle-dp-trigger-bg: Field;
+  --sprinkle-dp-trigger-color: FieldText;
+  --sprinkle-dp-trigger-border: #ccc;
+}
+
+[data-sprinkle-theme="dark"] {
+  --sprinkle-dp-bg: #2a2a2a;
+  --sprinkle-dp-text: #eee;
+  --sprinkle-dp-border: #444;
+  --sprinkle-dp-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  --sprinkle-dp-accent: #5ba0e9;
+  --sprinkle-dp-accent-text: #fff;
+  --sprinkle-dp-disabled: #555;
+  --sprinkle-dp-hover: #3a3a3a;
+  --sprinkle-dp-range-bg: rgba(91,160,233,0.22);
+  --sprinkle-dp-today-ring: #5ba0e9;
+  --sprinkle-dp-nav-color: #aaa;
+  --sprinkle-dp-nav-hover: #eee;
+  --sprinkle-dp-weekday-color: #777;
+  --sprinkle-dp-trigger-bg: #2a2a2a;
+  --sprinkle-dp-trigger-color: #eee;
+  --sprinkle-dp-trigger-border: #555;
+}
+
+/* trigger input */
 
 input[date-input] {
   font-family: inherit;
   font-size: inherit;
   line-height: normal;
-  padding: 0.35em 0.5em;
-  border: 1px solid var(--sprinkle-date-border);
+  padding: 0.35em 2.2em 0.35em 0.5em;
+  border: 1px solid var(--sprinkle-dp-trigger-border);
   border-radius: 4px;
-  background: var(--sprinkle-date-bg);
-  color: var(--sprinkle-date-color);
-  color-scheme: light dark;
-  accent-color: highlight;
+  background: var(--sprinkle-dp-trigger-bg);
+  color: var(--sprinkle-dp-trigger-color);
   min-width: 14ch;
   box-sizing: border-box;
+  cursor: pointer;
+}
+
+input[date-input]:focus {
+  border-color: var(--sprinkle-dp-accent);
+  outline: 2px solid var(--sprinkle-dp-accent);
+  outline-offset: -1px;
 }
 
 input[date-input]::-webkit-clear-button,
@@ -518,25 +567,440 @@ input[date-input]::-webkit-inner-spin-button {
   display: none;
 }
 
-input[date-input]::-webkit-datetime-edit {
-  padding: 0;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+input[date-input]::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
-input[date-input]::-webkit-datetime-edit-fields-wrapper {
-  padding: 0;
+/* calendar icon suffix */
+
+.sprinkle-dp-icon {
+  position: absolute;
+  right: 0.5em;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1em;
+  height: 1em;
+  pointer-events: none;
+  color: var(--sprinkle-dp-nav-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-input[date-input]::-webkit-datetime-edit-text {
-  padding: 0 0.1em;
+.sprinkle-dp-icon::before {
+  content: '';
+  display: block;
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  position: relative;
 }
 
-input[date-input]:focus {
-  border-color: highlight;
-  outline: 2px solid highlight;
+.sprinkle-dp-icon::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border-top: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
+  top: 0;
+  left: 0;
+  border-radius: 2px;
+}
+
+/* calendar popup */
+
+.sprinkle-dp {
+  position: fixed;
+  z-index: var(--sprinkle-dp-z);
+  background: var(--sprinkle-dp-bg);
+  color: var(--sprinkle-dp-text);
+  border: 1px solid var(--sprinkle-dp-border);
+  border-radius: var(--sprinkle-dp-radius);
+  box-shadow: var(--sprinkle-dp-shadow);
+  padding: 8px;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.sprinkle-dp[aria-hidden="false"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.sprinkle-dp > .sprinkle-dp {
+  position: static;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* header */
+
+.sprinkle-dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 8px;
+  flex-shrink: 0;
+}
+
+.sprinkle-dp-header button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--sprinkle-dp-nav-color);
+  font-size: 1.2em;
+  line-height: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.sprinkle-dp-header button:hover {
+  color: var(--sprinkle-dp-nav-hover);
+  background: var(--sprinkle-dp-hover);
+}
+
+.sprinkle-dp-header button:focus-visible {
+  outline: 2px solid var(--sprinkle-dp-accent);
   outline-offset: -1px;
+}
+
+.sprinkle-dp-month {
+  font-weight: 600;
+  font-size: 1em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.sprinkle-dp-month:hover {
+  background: var(--sprinkle-dp-hover);
+}
+
+/* weekdays row */
+
+.sprinkle-dp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 2px;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.sprinkle-dp-weekdays span {
+  text-align: center;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--sprinkle-dp-weekday-color);
+  padding: 4px 0;
+}
+
+/* day grid */
+
+.sprinkle-dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1px;
+  padding: 0 2px;
+  flex: 1;
+}
+
+.sprinkle-dp-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sprinkle-dp-cell-size);
+  height: var(--sprinkle-dp-cell-size);
+  border: none;
+  background: none;
+  color: var(--sprinkle-dp-text);
+  font-size: var(--sprinkle-dp-font-size);
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0 auto;
+  transition: background 0.1s;
+}
+
+.sprinkle-dp-grid button:hover:not([aria-disabled="true"]):not(.sprinkle-dp-selected) {
+  background: var(--sprinkle-dp-hover);
+}
+
+.sprinkle-dp-grid button:focus-visible {
+  outline: 2px solid var(--sprinkle-dp-accent);
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.sprinkle-dp-grid button[aria-disabled="true"] {
+  color: var(--sprinkle-dp-disabled);
+  cursor: default;
+  pointer-events: none;
+}
+
+.sprinkle-dp-grid button.sprinkle-dp-selected {
+  background: var(--sprinkle-dp-accent);
+  color: var(--sprinkle-dp-accent-text);
+  font-weight: 600;
+}
+
+.sprinkle-dp-grid button.sprinkle-dp-today:not(.sprinkle-dp-selected) {
+  box-shadow: inset 0 0 0 1.5px var(--sprinkle-dp-today-ring);
+  font-weight: 600;
+}
+
+/* empty cells */
+
+.sprinkle-dp-grid .sprinkle-dp-empty {
+  width: var(--sprinkle-dp-cell-size);
+  height: var(--sprinkle-dp-cell-size);
+  margin: 0 auto;
+}
+
+/* range mode */
+
+.sprinkle-dp-range {
+  display: flex;
+  gap: 0;
+}
+
+.sprinkle-dp-range .sprinkle-dp {
+  position: static;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.sprinkle-dp-range .sprinkle-dp:first-child {
+  border-radius: var(--sprinkle-dp-radius) 0 0 var(--sprinkle-dp-radius);
+  border: 1px solid var(--sprinkle-dp-border);
+}
+
+.sprinkle-dp-range .sprinkle-dp:last-child {
+  border-radius: 0 var(--sprinkle-dp-radius) var(--sprinkle-dp-radius) 0;
+  border: 1px solid var(--sprinkle-dp-border);
+  border-left: none;
+}
+
+.sprinkle-dp-range-wrap {
+  position: fixed;
+  z-index: var(--sprinkle-dp-z);
+  background: var(--sprinkle-dp-bg);
+  border: 1px solid var(--sprinkle-dp-border);
+  border-radius: var(--sprinkle-dp-radius);
+  box-shadow: var(--sprinkle-dp-shadow);
+  padding: 0;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.sprinkle-dp-range-wrap[aria-hidden="false"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* range highlighting */
+
+.sprinkle-dp-range-start {
+  background: var(--sprinkle-dp-accent) !important;
+  color: var(--sprinkle-dp-accent-text) !important;
+  border-radius: 50% 0 0 50% !important;
+  position: relative;
+  z-index: 1;
+}
+
+.sprinkle-dp-range-start.sprinkle-dp-selected {
+  border-radius: 50% !important;
+}
+
+.sprinkle-dp-range-end {
+  background: var(--sprinkle-dp-accent) !important;
+  color: var(--sprinkle-dp-accent-text) !important;
+  border-radius: 0 50% 50% 0 !important;
+  position: relative;
+  z-index: 1;
+}
+
+.sprinkle-dp-range-end.sprinkle-dp-selected {
+  border-radius: 50% !important;
+}
+
+.sprinkle-dp-range-between {
+  background: var(--sprinkle-dp-range-bg) !important;
+  border-radius: 0 !important;
+  color: var(--sprinkle-dp-text);
+}
+
+.sprinkle-dp-range-between.sprinkle-dp-today {
+  box-shadow: inset 0 0 0 1.5px var(--sprinkle-dp-today-ring);
+}
+
+/* month picker overlay */
+
+.sprinkle-dp-months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  padding: 8px 4px;
+  flex: 1;
+}
+
+.sprinkle-dp-months button {
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--sprinkle-dp-text);
+  font-size: 0.85em;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sprinkle-dp-months button:hover {
+  background: var(--sprinkle-dp-hover);
+}
+
+.sprinkle-dp-months button:focus-visible {
+  outline: 2px solid var(--sprinkle-dp-accent);
+  outline-offset: -1px;
+}
+
+.sprinkle-dp-months button.sprinkle-dp-month-current {
+  background: var(--sprinkle-dp-accent);
+  color: var(--sprinkle-dp-accent-text);
+  font-weight: 600;
+}
+
+.sprinkle-dp-months button[aria-disabled="true"] {
+  color: var(--sprinkle-dp-disabled);
+  cursor: default;
+  pointer-events: none;
+}
+
+/* year picker overlay */
+
+.sprinkle-dp-years {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  padding: 8px 4px;
+  flex: 1;
+}
+
+.sprinkle-dp-years button {
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--sprinkle-dp-text);
+  font-size: 0.85em;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sprinkle-dp-years button:hover {
+  background: var(--sprinkle-dp-hover);
+}
+
+.sprinkle-dp-years button:focus-visible {
+  outline: 2px solid var(--sprinkle-dp-accent);
+  outline-offset: -1px;
+}
+
+.sprinkle-dp-years button.sprinkle-dp-year-current {
+  background: var(--sprinkle-dp-accent);
+  color: var(--sprinkle-dp-accent-text);
+  font-weight: 600;
+}
+
+/* clear button */
+
+.sprinkle-dp-clear {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  border: none;
+  border-top: 1px solid var(--sprinkle-dp-border);
+  background: none;
+  color: var(--sprinkle-dp-nav-color);
+  font-size: 0.8em;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sprinkle-dp-clear:hover {
+  color: var(--sprinkle-dp-text);
+  background: var(--sprinkle-dp-hover);
+}
+
+/* mobile responsive */
+
+@media (max-width: 480px) {
+  .sprinkle-dp-range {
+    flex-direction: column;
+  }
+
+  .sprinkle-dp-range .sprinkle-dp:last-child {
+    border-left: 1px solid var(--sprinkle-dp-border);
+    border-top: none;
+    border-radius: 0 0 var(--sprinkle-dp-radius) var(--sprinkle-dp-radius);
+  }
+
+  .sprinkle-dp-range .sprinkle-dp:first-child {
+    border-radius: var(--sprinkle-dp-radius) var(--sprinkle-dp-radius) 0 0;
+  }
+
+  .sprinkle-dp-grid button {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
 }
 
 /* ── error-message ── */
