@@ -149,7 +149,9 @@
     }
     el.addEventListener('click', function () {
       if (!el.type || el.type === 'submit') {
-        set()
+        if (!el.form || !el.form.hasAttribute('enhance')) {
+          set()
+        }
       }
     })
     if (el.form) {
